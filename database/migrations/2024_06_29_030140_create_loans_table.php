@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('loans', function (Blueprint $table) {
             $table->id();
             $table->string('car_id');
-            $table->string('user_id');
+            $table->string('user');
             $table->date('loan_date');
             $table->date('return_date');
             $table->integer('total_cost');

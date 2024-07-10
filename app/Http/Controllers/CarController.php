@@ -3,63 +3,84 @@
 namespace App\Http\Controllers;
 
 use App\Models\Car;
+use App\Models\Type;
+
 use Illuminate\Http\Request;
+use  Illuminate\Support\Facades\Storage;
 
 class CarController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $cars = Car::all();
+    
+        return view('cars.index', compact('cars'));
     }
-
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        $types = Type::all();
+        return view('cars.create', compact('types'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
-    }
+        $validatedData = $request->validate([
+            'name' => 'required',
+            'photo' => 'required | image',
+            'type_id'  => 'required',
+            'cost_per_day' => 'required',
+            'year' => 'required',
+            'license_plate' => 'required',         
+        ]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Car $car)
-    {
-        //
-    }
+        if ($request->hasFile('photo')) {
+            $imageName = time() . '.' . $request->file('photo')->getClientOriginalExtension();
+            $request->file('photo')->storeAs('src/images/cars', $imageName, 'public');
+            $validatedData['photo'] = $imageName;
+        }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
+        Car::create($validatedData);
+
+        return redirect('/cars')->with('success', 'car added successfully!');
+    }
     public function edit(Car $car)
     {
-        //
+        $types = Type::all();
+        return view('cars.edit', compact('car', 'types'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Car $car)
-    {
-        //
+{
+    $validatedData = $request->validate([
+        'name' => 'required',
+        'photo' => 'required|image',
+        'type_id'  => 'required',
+        'cost_per_day' => 'required',
+        'year' => 'required',
+        'license_plate' => 'required', 
+    ]);
+
+    if ($request->hasFile('photo')) {
+        // Delete the old image
+        Storage::disk('public')->delete('src/images/cars/' . $car->photo);
+
+        // Upload the new image
+        $imageName = time() . '.' . $request->file('photo')->getClientOriginalExtension();
+        $request->file('photo')->storeAs('src/images/cars', $imageName, 'public');
+        $validatedData['photo'] = $imageName;
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Car $car)
-    {
-        //
-    }
+    $car->update($validatedData);
+
+    return redirect('/cars')->with('success', 'car updated successfully!');
 }
+    
+public function destroy(Car $car)
+{
+    $photo = Storage::disk('public')->delete('src/images/cars/' . $car->photo);
+
+    $car->delete($photo);
+    return redirect('/cars')->with('success', 'car deleted successfully!');
+}
+
+};
